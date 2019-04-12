@@ -14,5 +14,5 @@ func main() {
 	//}()
 	//fmt.Print(<-stringStream)
 
-	channel.TryGoroutine1()
+	channel.TryGoroutine3()
 }
