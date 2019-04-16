@@ -83,6 +83,7 @@ func TryGoroutine3() {
 }
 
 // TryGoroutine4 ...
+// 加入了 done ，防止 goroutine 泄漏
 func TryGoroutine4() {
 	newRandStream := func(done <-chan interface{}) <-chan int {
 		randStream := make(chan int)
