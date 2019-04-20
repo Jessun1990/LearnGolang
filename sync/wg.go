@@ -1,4 +1,7 @@
-package wg
+/*
+* WaitGroup : 等待一组并发操作完成
+ */
+package sync
 
 import (
 	"fmt"
@@ -10,7 +13,6 @@ func TryWg() {
 	var wg sync.WaitGroup
 
 	wg.Add(1)
-
 	go func() {
 		defer wg.Done()
 		fmt.Println("1st goroutine sleeping...")
@@ -21,7 +23,7 @@ func TryWg() {
 	go func() {
 		defer wg.Done()
 		fmt.Println("2nd goroutine sleeping...")
-		time.Sleep(2)
+		time.Sleep(1)
 	}()
 
 	wg.Wait()

@@ -1,18 +1,18 @@
 package main
 
 import (
-	//"github.com/jessun1990/LearnGolang/wg"
-	//"fmt"
-	"github.com/jessun1990/LearnGolang/channel"
+	sync "github.com/jessun1990/LearnGolang/sync"
 )
 
 func main() {
-	//wg.TryWg()
-	//stringStream := make(chan string)
-	//go func() {
-	//stringStream <- "hello channels"
-	//}()
-	//fmt.Print(<-stringStream)
+	//sayHello := func() {
+	//fmt.Println("hello")
+	//}
 
-	channel.TryGoroutine3()
+	//go sayHello()
+	/*
+	   输出没有能在在返回前完成，所有显示为空。
+	*/
+
+	sync.TryRWMutex()
 }
