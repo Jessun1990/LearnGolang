@@ -1,7 +1,5 @@
 package sync
 
-// wg.WaitGroup 的用法示例
-
 import (
 	"fmt"
 	"sync"
@@ -9,6 +7,7 @@ import (
 )
 
 // TryWg wg.WaitGroup 的用法示例
+// wg.Wait() 后的语句会等到所有的 goroutine 完成才会开始执行
 func TryWg() {
 	var wg sync.WaitGroup
 

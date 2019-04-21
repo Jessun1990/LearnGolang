@@ -1,7 +1,8 @@
-/*
-*      互斥锁和读写锁，保证共享资源的独占访问
- */
 package sync
+
+// golang 中的 sync 实现了两种锁:
+// Mutex: 互斥锁
+// RWMutex: 读写锁，RWMutex 基于 Mutex 实现
 
 import (
 	"fmt"
@@ -12,7 +13,17 @@ import (
 	"time"
 )
 
-// TryMutex ... 互斥锁
+/*
+- TryMutex 互斥锁举例，保证对资源的独占访问
+- Mutex 为互斥锁，Lock() 为加锁，Unlock() 为解锁
+- 在一个 goroutine 获得 Mutex 后，其他 goroutine 只能等到这个 goroutine 释放该 Mutex
+- 在使用 Lock() 加锁后，不能在继续加锁，直到利用 Unlock() 解锁后才能加锁
+- 在 Lock() 之前使用 Unlock() 会导致 panic 异常
+- 已经锁定的 Mutex 并不与特定的 goroutine 相关联，这样可以利用一个 goroutine 对其加锁，
+  再利用其他的 goroutine 对其解锁
+- 在同一个 goroutine 中的 Mutex 解锁之前再次对其进行加锁，会导致死锁
+- 适用于读写不确定，并且只有一个读或者写的场景
+*/
 func TryMutex() {
 	var count int
 	var lock sync.Mutex
@@ -51,7 +62,27 @@ func TryMutex() {
 	}
 }
 
-// TryRWMutex ... 读写锁
+/*
+- TryRWMutex 读写锁
+- RWMutex 是单写多读锁，该锁可以加多个读锁或者一个写锁
+- 读锁占用的情况下会阻止写，不会阻止读，多个 goroutine 可以同时获取读锁
+- 写锁会阻止其他 goroutine （无论读写） 进来，整个锁由该 goroutine 独占
+- 适用于读多写少的的场景
+
+- Lock() 加写锁，Unlock() 解写锁
+- 如果在加写锁之前已经有其他的读锁和写锁，则 Lock() 会阻塞直到该锁可用，
+  为确保该锁可用，已经阻塞的 Lock() 调用会从获得的锁中排除新的读取器，
+  即写锁权限高于读锁，有写锁时优先进行写锁定
+- 在 Lock() 之前使用 Unlock() 会导致 panic 异常
+
+- RLock() 和 RUnlock()
+- RLock() 加读锁时，如果存在写锁，则无法接续加锁；当只有读锁或者没有锁时，
+  可以加读锁，读锁可以加载多个
+- RUnlock() 解读锁，RUnlock() 撤销单次 RLock() 调用，对于其他同时存在的读
+  锁则没有效果
+- 在没有读锁的情况下调用 RUnlock() 会导致 panic 错误
+- RUnlock() 的个数不得多余 RLock()，否则会导致 panic 错误
+*/
 func TryRWMutex() {
 	producer := func(wg *sync.WaitGroup, l sync.Locker) {
 		defer wg.Done()

@@ -1,12 +1,11 @@
-/*
- sync.Once 只调用一次，不再考虑其他并发情况。
-*/
 package sync
 
 import (
 	"fmt"
 	"sync"
 )
+
+// Sync.Once 只调用一次，不再考虑其他并发情况
 
 func TryOnce() {
 	var count int
