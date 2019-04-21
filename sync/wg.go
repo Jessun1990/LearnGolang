@@ -1,7 +1,6 @@
-/*
-* WaitGroup : 等待一组并发操作完成
- */
 package sync
+
+// wg.WaitGroup 的用法示例
 
 import (
 	"fmt"
@@ -9,6 +8,7 @@ import (
 	"time"
 )
 
+// TryWg wg.WaitGroup 的用法示例
 func TryWg() {
 	var wg sync.WaitGroup
 
@@ -26,6 +26,6 @@ func TryWg() {
 		time.Sleep(1)
 	}()
 
-	wg.Wait()
+	wg.Wait() // 等待所有的 Done() 完成
 	fmt.Println("All goroutines complete")
 }
