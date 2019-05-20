@@ -96,7 +96,7 @@ func ShowSyncCond() {
 
 //Sync.NewCond()
 
-//Sync.Once
+// ShowSyncOnce
 func ShowSyncOnce() {
 	var count int
 
@@ -114,4 +114,19 @@ func ShowSyncOnce() {
 	}
 	increments.Wait()
 	fmt.Printf("Count is %d\n", count)
+}
+
+// ShowSyncPool
+func ShowSyncPool() {
+	myPool := &sync.Pool{
+		New: func() interface{} {
+			fmt.Println("Creating new instance.")
+			return struct{}{}
+		},
+	}
+
+	myPool.Get()
+	instance := myPool.Get()
+	myPool.Put(instance)
+	myPool.Get()
 }
