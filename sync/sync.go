@@ -2,8 +2,11 @@ package sync
 
 import (
 	"fmt"
+	"net"
 	"sync"
 	"time"
+
+	logger "github.com/hsyan2008/go-logger"
 )
 
 // ShowWaitGroup : go test ./sync  -run TestShowWaitGroup -v
@@ -67,6 +70,7 @@ func ShowMutex() {
 	fmt.Println("Arithmetic complete")
 }
 
+// ShowSyncCond : go test ./sync -run TestShowSyncCond
 func ShowSyncCond() {
 	c := sync.NewCond(&sync.Mutex{})
 	queue := make([]interface{}, 0, 10)
@@ -94,9 +98,7 @@ func ShowSyncCond() {
 	}
 }
 
-//Sync.NewCond()
-
-// ShowSyncOnce
+// ShowSyncOnce :
 func ShowSyncOnce() {
 	var count int
 
@@ -116,7 +118,8 @@ func ShowSyncOnce() {
 	fmt.Printf("Count is %d\n", count)
 }
 
-// ShowSyncPool
+// ****************************************************************
+// ShowSyncPool :
 func ShowSyncPool() {
 	myPool := &sync.Pool{
 		New: func() interface{} {
@@ -129,4 +132,77 @@ func ShowSyncPool() {
 	instance := myPool.Get()
 	myPool.Put(instance)
 	myPool.Get()
+}
+
+// sync.Pool 性能变化
+func connectToService() interface{} { // connectToService 模拟创建到服务的连接
+	time.Sleep(time.Second)
+	return struct{}{}
+}
+
+func startNetworkDaemon() *sync.WaitGroup { // 如果服务为每个请求都启动一个新的连接。
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		server, err := net.Listen("tcp", "localhost:8080")
+		if err != nil {
+			logger.Warn(err)
+			return
+		}
+		defer server.Close()
+
+		wg.Done()
+
+		for {
+			conn, err := server.Accept()
+			if err != nil {
+				logger.Warn(err)
+				continue
+			}
+			connectToService()
+			fmt.Fprintln(conn, "")
+			conn.Close()
+		}
+
+	}()
+
+	return &wg
+}
+
+func warmServiceConnCache() *sync.Pool {
+	p := &sync.Pool{
+		New: connectToService,
+	}
+
+	for i := 0; i < 10; i++ {
+		p.Put(p.New())
+	}
+	return p
+}
+
+func startNetworkDaemonConnCache() *sync.WaitGroup {
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		connPool := warmServiceConnCache()
+		server, err := net.Listen("tcp", "localhost:8081")
+		if err != nil {
+			logger.Warn(err)
+			return
+		}
+		defer server.Close()
+		wg.Done()
+		for {
+			conn, err := server.Accept()
+			if err != nil {
+				logger.Warn(err)
+				continue
+			}
+			svcConn := connPool.Get()
+			fmt.Fscanln(conn, "")
+			connPool.Put(svcConn)
+			conn.Close()
+		}
+	}()
+	return &wg
 }
