@@ -34,5 +34,13 @@ func TestChanExample6(t *testing.T) {
 
 // go test ./channel -run TestChanExample7 -v
 func TestChanExample7(t *testing.T) {
-	selectExmaple2()
+	selectExample2()
+}
+
+func TestChanExample8(t *testing.T) {
+	selectExample3()
+}
+
+func TestChanExample9(t *testing.T) {
+	selectExample4()
 }

@@ -22,6 +22,7 @@ import (
  dateStream := make(chan<- interface{})
 */
 
+// 通过通信共享内存来进行同步
 // channel 是阻塞的
 func chanExample1() {
 	stringStream := make(chan string)
@@ -141,7 +142,7 @@ func selectExample1() {
 	}
 }
 
-func selectExmaple2() {
+func selectExample2() {
 	c1 := make(chan interface{})
 	close(c1)
 	c2 := make(chan interface{})
@@ -157,4 +158,37 @@ func selectExmaple2() {
 		}
 	}
 	fmt.Printf("c1Count: %d\nc2Count: %d\n", c1Count, c2Count)
+}
+
+func selectExample3() {
+	//start := time.Now()
+	var c <-chan int
+	select {
+	case <-c:
+	case <-time.After(time.Second):
+		fmt.Println("Time out.")
+		//default:
+		//fmt.Printf("In default after %+v\n\n", time.Since(start))
+	}
+}
+
+func selectExample4() {
+	done := make(chan interface{})
+	go func() {
+		time.Sleep(5 * time.Second)
+		close(done)
+	}()
+
+	workCounter := 0
+loop:
+	for {
+		select {
+		case <-done:
+			break loop
+		default:
+		}
+		workCounter++
+		time.Sleep(time.Second)
+	}
+	fmt.Printf("Achieved %+v cycles of work before signalled to stop. \n", workCounter)
 }

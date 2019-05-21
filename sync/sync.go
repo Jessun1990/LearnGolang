@@ -31,6 +31,7 @@ func ShowWaitGroup() {
 }
 
 // ShowMutex :go test ./sync  -run TestShowMutex -v
+// 通过共享内存的同步原语
 func ShowMutex() {
 	var count int
 	var lock sync.Mutex
