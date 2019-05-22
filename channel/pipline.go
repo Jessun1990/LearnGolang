@@ -1,6 +1,9 @@
 package channel
 
-import "fmt"
+import (
+	"fmt"
+	"math/rand"
+)
 
 // Pipline 的组合用法
 func piplineExample() {
@@ -88,6 +91,7 @@ func piplineExample2() {
 }
 
 // 生成器举例
+// go test ./channel -run TestPiplineExample3 -v -count=1
 func piplineExample3() {
 
 	repeat := func(done <-chan interface{}, values ...interface{},
@@ -107,13 +111,6 @@ func piplineExample3() {
 		}()
 		return valueStream
 	}
-
-	//done := make(chan interface{})
-	//close(done)
-
-	//for x := range repeat(done, []int{1, 2, 3}) {
-	//fmt.Println(x)
-	//}
 
 	take := func(done <-chan interface{}, valueStream <-chan interface{},
 		num int,
@@ -137,7 +134,53 @@ func piplineExample3() {
 	defer close(done)
 
 	for num := range take(done, repeat(done, 1), 10) {
-		fmt.Printf("%+v\n", num)
+		fmt.Printf("%d\n", num)
 	}
 
+}
+
+func piplineExample4() {
+	repeatFn := func(
+		done <-chan interface{},
+		fn func() interface{},
+	) <-chan interface{} {
+		valueStream := make(chan interface{})
+		go func() {
+			defer close(valueStream)
+			for {
+				select {
+				case <-done:
+					return
+				case valueStream <- fn():
+				}
+			}
+		}()
+		return valueStream
+	}
+
+	take := func(done <-chan interface{}, valueStream <-chan interface{},
+		num int,
+	) <-chan interface{} {
+
+		takeStream := make(chan interface{})
+		go func() {
+			defer close(takeStream)
+			for i := 0; i < num; i++ {
+				select {
+				case <-done:
+					return
+				case takeStream <- valueStream:
+				}
+			}
+		}()
+		return takeStream
+	}
+
+	done := make(chan interface{})
+	defer close(done)
+
+	rand := func() interface{} { return rand.Int() }
+	for num := range take(done, repeatFn(done, rand), 10) {
+		fmt.Printf("%d\n", num)
+	}
 }

@@ -14,3 +14,7 @@ func TestPiplineExample2(t *testing.T) {
 func TestPiplineExample3(t *testing.T) {
 	piplineExample3()
 }
+
+func TestPiplineExample4(t *testing.T) {
+	piplineExample4()
+}
