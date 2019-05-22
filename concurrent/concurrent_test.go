@@ -21,3 +21,13 @@ func TestGoroutineExample3(t *testing.T) {
 func TestGoroutineExample4(t *testing.T) {
 	goroutineExample4()
 }
+
+// go test ./concurrent/ -run TestGoroutineExample5 -v
+func TestGoroutineExample5(t *testing.T) {
+	goroutineExample5()
+}
+
+// go test ./concurrent/ -run TestGoroutineExample6 -v
+func TestGoroutineExample6(t *testing.T) {
+	goroutineExample6()
+}
