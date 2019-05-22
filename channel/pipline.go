@@ -93,7 +93,6 @@ func piplineExample2() {
 // 生成器举例
 // go test ./channel -run TestPiplineExample3 -v -count=1
 func piplineExample3() {
-
 	repeat := func(done <-chan interface{}, values ...interface{},
 	) <-chan interface{} {
 		valueStream := make(chan interface{})
@@ -123,7 +122,7 @@ func piplineExample3() {
 				select {
 				case <-done:
 					return
-				case takeStream <- valueStream:
+				case takeStream <- <-valueStream:
 				}
 			}
 		}()
@@ -140,10 +139,9 @@ func piplineExample3() {
 }
 
 func piplineExample4() {
-	repeatFn := func(
-		done <-chan interface{},
-		fn func() interface{},
+	repeatFn := func(done <-chan interface{}, fn func() interface{},
 	) <-chan interface{} {
+
 		valueStream := make(chan interface{})
 		go func() {
 			defer close(valueStream)
@@ -169,7 +167,7 @@ func piplineExample4() {
 				select {
 				case <-done:
 					return
-				case takeStream <- valueStream:
+				case takeStream <- <-valueStream:
 				}
 			}
 		}()

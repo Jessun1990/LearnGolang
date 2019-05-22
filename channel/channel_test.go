@@ -52,6 +52,7 @@ func TestChanExample10(t *testing.T) {
 	selectExample5()
 }
 
+// go test ./channel -run TestChanExample11 -v
 func TestChanExample11(t *testing.T) {
 	chanExample6()
 }
