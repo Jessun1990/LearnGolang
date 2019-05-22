@@ -3,6 +3,7 @@ package channel
 import (
 	"bytes"
 	"fmt"
+	"net/http"
 	"os"
 	"sync"
 	"time"
@@ -186,9 +187,104 @@ loop:
 		case <-done:
 			break loop
 		default:
+			fmt.Println("This is default")
 		}
 		workCounter++
 		time.Sleep(time.Second)
 	}
 	fmt.Printf("Achieved %+v cycles of work before signalled to stop. \n", workCounter)
+}
+
+// or-channel : 将任意数量的channel组合到单个channel中，只要任何
+// 组件 channel 关闭或者写入，该 channel 就会关闭
+func selectExample5() {
+	var or func(chans ...<-chan interface{}) <-chan interface{}
+	or = func(chans ...<-chan interface{}) <-chan interface{} {
+		switch len(chans) {
+		case 0:
+			return nil // 递归函数，终止条件
+		case 1:
+			return chans[0]
+		}
+
+		orDone := make(chan interface{})
+
+		go func() { // 本函数最重要的部分
+			defer close(orDone)
+			switch len(chans) {
+			case 2:
+				select {
+				case <-chans[0]:
+				case <-chans[1]:
+				}
+			default:
+				select {
+				case <-chans[0]:
+				case <-chans[1]:
+				case <-chans[2]:
+				case <-or(append(chans[3:], orDone)...):
+				}
+			}
+		}()
+		return orDone
+	}
+
+	///////// 例子
+	sig := func(after time.Duration) <-chan interface{} { // 创建一个 channel ，指定时间后关闭
+		c := make(chan interface{})
+		go func() {
+			defer close(c)
+			time.Sleep(after)
+		}()
+		return c
+	}
+
+	start := time.Now()
+	<-or(
+		sig(2*time.Hour),
+		sig(5*time.Minute),
+		sig(1*time.Second),
+		sig(1*time.Hour),
+		sig(1*time.Minute),
+	)
+	fmt.Printf("done after %+v", time.Since(start))
+}
+
+// 使用 channel 过程中的错误处理
+type result struct {
+	Error    error
+	Response *http.Response
+}
+
+func chanExample6() {
+	checkStatus := func(done <-chan interface{}, urls ...string) <-chan result {
+		results := make(chan result)
+		go func() {
+			defer close(results)
+			for _, url := range urls {
+				var res result
+				rsp, err := http.Get(url)
+				res = result{
+					Error:    err,
+					Response: rsp,
+				}
+				select {
+				case <-done:
+					return
+				case results <- res:
+				}
+			}
+		}()
+		return results
+	}
+	done := make(chan interface{})
+	defer close(done)
+	urls := []string{"https://www.google.com", "https://badhost"}
+	for result := range checkStatus(done, urls...) {
+		if result.Error != nil {
+			fmt.Printf("error: <%+v>", result.Error)
+			continue
+		}
+		fmt.Printf("Response: %+v\n", result.Response.Status)
+	}
 }
