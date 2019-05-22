@@ -103,7 +103,8 @@ func goroutineExample4() {
 }
 
 func goroutineExample5() {
-	or := func(chans ...<-chan interface{}) <-chan interface{} {
+	var or func(chans ...<-chan interface{}) <-chan interface{}
+	or = func(chans ...<-chan interface{}) <-chan interface{} {
 		switch len(chans) {
 		case 0:
 			return nil
@@ -130,5 +131,6 @@ func goroutineExample5() {
 				}
 			}
 		}()
+		return orDone
 	}
 }
