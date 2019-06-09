@@ -1,4 +1,4 @@
-package channel
+package chapter4
 
 import "testing"
 
