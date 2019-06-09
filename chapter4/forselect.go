@@ -157,5 +157,5 @@ func goroutineExample3() {
 		sig(3*time.Minute),
 		sig(4*time.Second),
 	)
-	fmt.Printf("done after %+v", time.Since(start)
+	fmt.Printf("done after %+v", time.Since(start))
 }
