@@ -1,9 +1,11 @@
 package chapter4
 
-func TestErrHandleExample() {
+import "testing"
+
+func TestErrHandleExample(t *testing.T) {
 	errHandleExample()
 }
 
-func TestErrHandleExample2() {
+func TestErrHandleExample2(t *testing.T) {
 	errHandleExample2()
 }

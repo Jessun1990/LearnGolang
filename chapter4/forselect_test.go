@@ -1,13 +1,17 @@
 package chapter4
 
-func TestGoroutineExample() {
-	goroutineExample()
-}
+import "testing"
 
-func TestGoroutineExample2() {
+/*
+go test ./chapter4 -run TestGoroutineExample2 -v
+*/
+func TestGoroutineExample2(t *testing.T) {
 	goroutineExample2()
 }
 
-func TestGoroutineExample3() {
+/*
+go test ./chapter4 -run TestGoroutineExample3 -v
+*/
+func TestGoroutineExample3(t *testing.T) {
 	goroutineExample3()
 }

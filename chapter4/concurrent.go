@@ -2,7 +2,7 @@ package chapter4
 
 import "fmt"
 
-// 特定约束举例
+// 特定约束举例 P100
 func concurrentExmaple() {
 	data := make([]int, 4)
 	loopData := func(handleData chan<- int) {
@@ -19,7 +19,7 @@ func concurrentExmaple() {
 	}
 }
 
-// 词法约束举例
+// 词法约束举例 P101
 func concurrentExmaple2() {
 	chanOwer := func() <-chan int {
 		results := make(chan int, 5)

@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-/*
+/* P103
 for { // 无限循环或者使用 range 循环
 	select {
 		// 使用 channel 进行作业
@@ -46,12 +46,29 @@ for {
 }
 */
 
-// 父 goroutine 向子 goroutine 发出信号通知
-// 处理 channel 上接收 goroutine 的情况
+// goroutineExample: 简单的 goroutine 泄漏举例
 func goroutineExample() {
-	doWork := func(
-		done <-chan interface{}, strings <-chan string) <-chan interface{} {
+	doWork := func(strings <-chan string) <-chan interface{} {
+		completed := make(chan interface{})
+		go func() {
+			defer fmt.Println("doWork exited.")
+			defer close(completed)
+			for s := range strings {
+				fmt.Println(s)
+			}
+		}()
+		return completed
+	}
+	doWork(nil)
+	fmt.Println("Done.")
+}
 
+// goroutineExample2 使用 done 信号来通知 goroutine 退出，P106
+// channel 上接收 goroutine 。
+func goroutineExample2() {
+	doWork := func(
+		done <-chan interface{}, strings <-chan interface{},
+	) <-chan interface{} {
 		terminated := make(chan interface{})
 		go func() {
 			defer fmt.Println("doWork exited.")
@@ -72,16 +89,16 @@ func goroutineExample() {
 	terminated := doWork(done, nil)
 
 	go func() {
-		time.Sleep(time.Second)
-		fmt.Println("Canceling doWork goroutine...")
+		fmt.Println("Canceling doWork goroutine ...")
+		time.Sleep(10 * time.Second)
+		close(done)
 	}()
-
 	<-terminated
 	fmt.Println("Done.")
 }
 
-// goroutine 阻塞了向 channel 进行写入的请求
-func goroutineExample2() {
+// goroutine 阻塞了向 channel 进行写入的请求， P107
+func goroutineExample3() {
 	newRandStream := func(done <-chan interface{}) <-chan int {
 		randStream := make(chan int)
 		go func() {
@@ -110,7 +127,7 @@ func goroutineExample2() {
 }
 
 // 通过递归和 goroutine 创建一个复合的 done channel
-func goroutineExample3() {
+func goroutineExample4() {
 	var or func(chans ...<-chan interface{}) <-chan interface{}
 	or = func(chans ...<-chan interface{}) <-chan interface{} {
 		switch len(chans) {
