@@ -97,7 +97,7 @@ func goroutineExample2() {
 	fmt.Println("Done.")
 }
 
-// goroutine 阻塞了向 channel 进行写入的请求， P107
+// goroutine 阻塞了向 channel 进行写入的请求， P108
 func goroutineExample3() {
 	newRandStream := func(done <-chan interface{}) <-chan int {
 		randStream := make(chan int)
@@ -126,38 +126,40 @@ func goroutineExample3() {
 	time.Sleep(time.Second)
 }
 
-// 通过递归和 goroutine 创建一个复合的 done channel
+// P109 通过递归和 goroutine 创建一个复合的 done channel，将一个或者多个完成的 channel 合并到一个完成的 channel 中。
+// 将任何数量的 channel 组合到单个 channel 中，只要任何组件 channel 关闭或写入，该 channel 就会关闭，依赖于其关闭的 channel 也将关闭。
 func goroutineExample4() {
-	var or func(chans ...<-chan interface{}) <-chan interface{}
-	or = func(chans ...<-chan interface{}) <-chan interface{} {
-		switch len(chans) {
+	var or func(channels ...<-chan interface{}) <-chan interface{}
+	or = func(channels ...<-chan interface{}) <-chan interface{} {
+		switch len(channels) {
 		case 0:
-			return nil
+			return nil // 递归函数的终止标准
 		case 1:
-			return chans[0]
+			return channels[0]
 		}
-		orDone := make(chan interface{})
 
+		orDone := make(chan interface{})
 		go func() {
 			defer close(orDone)
 
-			switch len(chans) {
+			switch len(channels) {
 			case 2:
 				select {
-				case <-chans[0]:
-				case <-chans[1]:
+				case <-channels[0]:
+				case <-channels[1]:
 				}
 			default:
 				select {
-				case <-chans[0]:
-				case <-chans[1]:
-				case <-chans[2]:
-				case <-or(append(chans[3:], orDone)...):
+				case <-channels[0]:
+				case <-channels[1]:
+				case <-channels[2]:
+				case <-or(append(channels[3:], orDone)...):
 				}
 			}
 		}()
 		return orDone
 	}
+	// ================== 以上是定义
 
 	sig := func(after time.Duration) <-chan interface{} {
 		c := make(chan interface{})
@@ -167,12 +169,13 @@ func goroutineExample4() {
 		}()
 		return c
 	}
-
 	start := time.Now()
 	<-or(
 		sig(2*time.Hour),
-		sig(3*time.Minute),
-		sig(4*time.Second),
+		sig(5*time.Minute),
+		sig(1*time.Second),
+		sig(1*time.Hour),
+		sig(1*time.Minute),
 	)
-	fmt.Printf("done after %+v", time.Since(start))
+	fmt.Printf("done after %v", time.Since(start))
 }

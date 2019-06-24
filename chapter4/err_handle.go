@@ -5,12 +5,12 @@ import (
 	"net/http"
 )
 
-type Result struct {
-	Error    error
-	Response *http.Response
-}
-
+// errHandleExample 并发方案中，错误处理的方案，P113
 func errHandleExample() {
+	type Result struct {
+		Error    error
+		Response *http.Response
+	}
 	checkStatus := func(done <-chan interface{}, urls ...string) <-chan Result {
 		results := make(chan Result)
 		go func() {
@@ -31,7 +31,7 @@ func errHandleExample() {
 
 	done := make(chan interface{})
 	defer close(done)
-	urls := []string{"https://www.google.com", "https://badhost"}
+	urls := []string{"https://www.google.com", "https://www.youtube.com"}
 	for result := range checkStatus(done, urls...) {
 		if result.Error != nil {
 			fmt.Printf("error: %v", result.Error)
@@ -42,6 +42,10 @@ func errHandleExample() {
 }
 
 func errHandleExample2() {
+	type Result struct {
+		Error    error
+		Response *http.Response
+	}
 	checkStatus := func(done <-chan interface{}, urls ...string) <-chan Result {
 		results := make(chan Result)
 		go func() {
