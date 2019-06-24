@@ -17,7 +17,9 @@ func TestPiplineExample3(t *testing.T) {
 	piplineExample3()
 }
 
-// go test ./channel -run TestPiplineExample4 -v -count=1
+/*
+ go test ./chapter4 -run TestPiplineExample4 -v -count=1
+*/
 func TestPiplineExample4(t *testing.T) {
 	piplineExample4()
 }

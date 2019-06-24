@@ -3,6 +3,7 @@ package chapter4
 import (
 	"fmt"
 	"math/rand"
+	"sync"
 )
 
 func piplineExample() {
@@ -43,9 +44,8 @@ func piplineExample2() {
 		}()
 		return intStream
 	}
-
-	multiply := func(done <-chan interface{},
-		intStream <-chan int, multiplier int) <-chan int {
+	multiply := func(done <-chan interface{}, intStream <-chan int,
+		multiplier int) <-chan int {
 		multipiedStream := make(chan int)
 		go func() {
 			defer close(multipiedStream)
@@ -86,7 +86,7 @@ func piplineExample2() {
 	}
 }
 
-// 生成器举例
+// 生成器举例，P126
 // go test ./channel -run TestPiplineExample3 -v -count=1
 func piplineExample3() {
 	repeat := func(done <-chan interface{}, values ...interface{},
@@ -135,9 +135,7 @@ func piplineExample3() {
 }
 
 func piplineExample4() {
-	repeatFn := func(done <-chan interface{}, fn func() interface{},
-	) <-chan interface{} {
-
+	repeatFn := func(done <-chan interface{}, fn func() interface{}) <-chan interface{} {
 		valueStream := make(chan interface{})
 		go func() {
 			defer close(valueStream)
@@ -152,10 +150,7 @@ func piplineExample4() {
 		return valueStream
 	}
 
-	take := func(done <-chan interface{}, valueStream <-chan interface{},
-		num int,
-	) <-chan interface{} {
-
+	take := func(done <-chan interface{}, valueStream <-chan interface{}, num int) <-chan interface{} {
 		takeStream := make(chan interface{})
 		go func() {
 			defer close(takeStream)
@@ -163,7 +158,7 @@ func piplineExample4() {
 				select {
 				case <-done:
 					return
-				case takeStream <- <-valueStream:
+				case takeStream <- valueStream:
 				}
 			}
 		}()
@@ -172,9 +167,46 @@ func piplineExample4() {
 
 	done := make(chan interface{})
 	defer close(done)
-
 	rand := func() interface{} { return rand.Int() }
+
 	for num := range take(done, repeatFn(done, rand), 10) {
-		fmt.Printf("%d\n", num)
+		fmt.Println(num)
 	}
+}
+
+func piplineExample5() {
+	fanIn := func(done <-chan interface{},
+		channels ...<-chan interface{}) <-chan interface{} {
+
+		var wg sync.WaitGroup
+		multiplexedStream := make(chan interface{})
+
+		multiplex := func(c <-chan interface{}) {
+			defer wg.Done()
+			for i := range c {
+				select {
+				case <-done:
+					return
+				case multiplexedStream <- i:
+				}
+			}
+		}
+
+		// 从所有的 channel 里取值
+		wg.Add(len(channels))
+		for _, c := range channels {
+			go multiplex(c)
+		}
+
+		// 等待所有的读操作结束
+		go func() {
+			wg.Wait()
+			close(multiplexedStream)
+		}()
+
+		return multiplexedStream
+	}
+
+	done := make(chan interface{})
+	defer close(done)
 }
