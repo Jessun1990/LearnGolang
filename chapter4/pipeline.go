@@ -3,7 +3,6 @@ package chapter4
 import (
 	"fmt"
 	"math/rand"
-	"sync"
 )
 
 func piplineExample() {
@@ -172,41 +171,4 @@ func piplineExample4() {
 	for num := range take(done, repeatFn(done, rand), 10) {
 		fmt.Println(num)
 	}
-}
-
-func piplineExample5() {
-	fanIn := func(done <-chan interface{},
-		channels ...<-chan interface{}) <-chan interface{} {
-
-		var wg sync.WaitGroup
-		multiplexedStream := make(chan interface{})
-
-		multiplex := func(c <-chan interface{}) {
-			defer wg.Done()
-			for i := range c {
-				select {
-				case <-done:
-					return
-				case multiplexedStream <- i:
-				}
-			}
-		}
-
-		// 从所有的 channel 里取值
-		wg.Add(len(channels))
-		for _, c := range channels {
-			go multiplex(c)
-		}
-
-		// 等待所有的读操作结束
-		go func() {
-			wg.Wait()
-			close(multiplexedStream)
-		}()
-
-		return multiplexedStream
-	}
-
-	done := make(chan interface{})
-	defer close(done)
 }
