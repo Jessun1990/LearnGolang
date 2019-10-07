@@ -2,7 +2,6 @@ package chapter3
 
 import (
 	"fmt"
-	"net/http"
 	"time"
 )
 
@@ -130,43 +129,43 @@ func selectExample5() {
 }
 
 // chanExample6 ：使用 channel 并发时的错误处理
-func chanExample6() {
-	type customRes struct {
-		Error    error
-		Response *http.Response
-	}
+//func chanExample6() {
+//type customRes struct {
+//Error    error
+//Response *http.Response
+//}
 
-	checkStatus := func(done <-chan interface{},
-		urls ...string) <-chan customRes {
-		results := make(chan customRes)
+//checkStatus := func(done <-chan interface{},
+//urls ...string) <-chan customRes {
+//results := make(chan customRes)
 
-		go func() {
-			defer close(results)
-			for _, url := range urls {
-				rsp, err := http.Get(url)
-				res := customRes{
-					Error:    err,
-					Response: rsp,
-				}
-				select {
-				case <-done:
-					return
-				case results <- res:
-				}
-			}
-		}()
-		return results
-	}
+//go func() {
+//defer close(results)
+//for _, url := range urls {
+//rsp, err := http.Get(url)
+//res := customRes{
+//Error:    err,
+//Response: rsp,
+//}
+//select {
+//case <-done:
+//return
+//case results <- res:
+//}
+//}
+//}()
+//return results
+//}
 
-	done := make(chan interface{})
-	defer close(done)
+//done := make(chan interface{})
+//defer close(done)
 
-	urls := []string{"https://www.google.com", "https://badhost"}
-	for result := range checkStatus(done, urls...) {
-		if result.Error != nil {
-			fmt.Printf("error: <%+v>", result.Error)
-			continue
-		}
-		fmt.Printf("Response: %+v\n", result.Response.Status)
-	}
-}
+//urls := []string{"https://www.google.com", "https://badhost"}
+//for result := range checkStatus(done, urls...) {
+//if result.Error != nil {
+//fmt.Printf("error: <%+v>", result.Error)
+//continue
+//}
+//fmt.Printf("Response: %+v\n", result.Response.Status)
+//}
+//}
