@@ -9,36 +9,25 @@ import (
 	"github.com/hsyan2008/go-logger"
 )
 
-// goroutineExample1 : goroutine 并发 demo
-// go test ./chapter3 -run TestGoroutineExample -v
-func goroutineExample() {
-	for i := 0; i <= 10; i++ {
-		go func(no int) {
-			fmt.Printf("i = %+v\n", no)
-		}(i)
-		time.Sleep(time.Millisecond)
-	}
-}
-
 // waitGroupExample1: WaitGroup 的用法 demo
 // go test ./chapter3 -run TestWaitGroupExample -v
-func waitGroupExample() {
-	var wg sync.WaitGroup
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		fmt.Println("1st goroutine sleeping...")
-		time.Sleep(1 * time.Second)
-	}()
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		fmt.Println("2nd goroutine sleeping...")
-		time.Sleep(2 * time.Second)
-	}()
-	wg.Wait()
-	fmt.Println("All goroutine complete.")
-}
+//func waitGroupExample() {
+//var wg sync.WaitGroup
+//wg.Add(1)
+//go func() {
+//defer wg.Done()
+//fmt.Println("1st goroutine sleeping...")
+//time.Sleep(1 * time.Second)
+//}()
+//wg.Add(1)
+//go func() {
+//defer wg.Done()
+//fmt.Println("2nd goroutine sleeping...")
+//time.Sleep(2 * time.Second)
+//}()
+//wg.Wait()
+//fmt.Println("All goroutine complete.")
+//}
 
 // mutextExample 互斥锁用法 demo
 // go test ./chapter3 -run mutextExample -v
@@ -192,33 +181,33 @@ func syncPoolExample() {
 }
 
 // startNetworkDaemon 模拟对服务端的请求连接
-func startNetworkDaemon() *sync.WaitGroup {
-	connectToService := func() interface{} {
-		return struct{}{}
-	}
+//func startNetworkDaemon() *sync.WaitGroup {
+//connectToService := func() interface{} {
+//return struct{}{}
+//}
 
-	var wg sync.WaitGroup
-	wg.Add(1)
-	go func() {
-		server, err := net.Listen("tcp", "localhost:8080")
-		if err != nil {
-			logger.Warn(err)
-			return
-		}
-		defer server.Close()
-		for {
-			conn, err := server.Accept()
-			if err != nil {
-				logger.Warn(err)
-				continue
-			}
-			connectToService()
-			fmt.Fprintln(conn, "")
-			conn.Close()
-		}
-	}()
-	return &wg
-}
+//var wg sync.WaitGroup
+//wg.Add(1)
+//go func() {
+//server, err := net.Listen("tcp", "localhost:8080")
+//if err != nil {
+//logger.Warn(err)
+//return
+//}
+//defer server.Close()
+//for {
+//conn, err := server.Accept()
+//if err != nil {
+//logger.Warn(err)
+//continue
+//}
+//connectToService()
+//fmt.Fprintln(conn, "")
+//conn.Close()
+//}
+//}()
+//return &wg
+//}
 
 // startNetworkDaemonConnCache 模拟对服务端的请求连接
 func startNetworkDaemonConnCache() *sync.WaitGroup {

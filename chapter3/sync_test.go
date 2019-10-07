@@ -51,19 +51,19 @@ func TestSyncOnceExample(t *testing.T) {
 }
 
 // go test ./chapter3 -benchtime=10s -bench=. -run=none -v
-func BenchmarkNetworkRequest(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		conn, err := net.Dial("tcp", "localhost:8080")
-		if err != nil {
-			b.Fatal(err)
-			return
-		}
-		if _, err := ioutil.ReadAll(conn); err != nil {
-			b.Fatalf("cannot read: %+v", err)
-		}
-		conn.Close()
-	}
-}
+//func BenchmarkNetworkRequest(b *testing.B) {
+//for i := 0; i < b.N; i++ {
+//conn, err := net.Dial("tcp", "localhost:8080")
+//if err != nil {
+//b.Fatal(err)
+//return
+//}
+//if _, err := ioutil.ReadAll(conn); err != nil {
+//b.Fatalf("cannot read: %+v", err)
+//}
+//conn.Close()
+//}
+//}
 
 func BenchmarkNetworkRequestConnCache(b *testing.B) {
 	for i := 0; i < b.N; i++ {
