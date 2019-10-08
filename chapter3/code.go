@@ -764,3 +764,50 @@ func bufferedChanExample() {
 //         打开但空      关闭Channel：读到生产者的默认值
 //		   关闭的        panic
 //         只读          编译错误
+
+// chanExample11
+// 输出结果：
+//   Received: 0
+//   Received: 1
+//   Received: 2
+//   Received: 3
+//   Received: 4
+//   Received: 5
+//   Done receiving!
+func chanExample11() {
+	chanOwner := func() <-chan int {
+		resultStream := make(chan int, 5)
+		go func() {
+			defer close(resultStream)
+			for i := 0; i <= 5; i++ {
+				resultStream <- i
+			}
+		}()
+		return resultStream
+	}
+
+	resultStream := chanOwner()
+	for result := range resultStream {
+		fmt.Printf("Received: %d\n", result)
+	}
+	fmt.Println("Done receiving!")
+}
+
+/*
+	Select
+*/
+
+func selectExample() {
+	var c1, c2 <-chan interface{}
+	var c3 chan<- interface{}
+
+	select {
+	case <-c1:
+		// 其他代码
+	case <-c2:
+		// 其他代码
+	case c3 <- struct{}{}:
+		// 其他代码
+	}
+
+}
