@@ -18,8 +18,8 @@ import (
 )
 
 /*
-	gorountine
-	协程是非抢占式的、简单并发子 gorountine，不能被中断
+   gorountine
+   协程是非抢占式的、简单并发子 gorountine，不能被中断
 */
 
 // gorountineExample gorountine demo
@@ -32,7 +32,7 @@ func gorountineExample() {
 }
 
 /*
-	Go 语言的主机托管机制是一个名为 M:N 的调度器的实现，
+    Go 语言的主机托管机制是一个名为 M:N 的调度器的实现，
 M 个绿色线程映射到 N 个 OS 线程。然后 gorountine 安排在
 绿色线程上。当 gorountine 数量超过可用的绿色线程时,调度
 程序将处理分布在可用线程上的 gorountine，确保当这些 gorountine
@@ -40,7 +40,7 @@ M 个绿色线程映射到 N 个 OS 线程。然后 gorountine 安排在
 */
 
 /*
-	Go 语言遵循一个成为 fork-join 的并发模型。
+    Go 语言遵循一个成为 fork-join 的并发模型。
 fork 指的是在程序中任意一点，它可以将执行的子分支与其父节点同时运行。
 join 指的是在将来某个时候，这些并发的执行分支将会合并在一起。
 */
@@ -110,8 +110,8 @@ func syncExample4() {
 }
 
 /*
-	gorountine 非常轻量
-	GC 并不会回收被丢弃的 gorountine
+   gorountine 非常轻量
+   GC 并不会回收被丢弃的 gorountine
 */
 
 // gorountineExample2 展示了了 gorountine 的内存占用
@@ -177,7 +177,7 @@ func contextSwitch(b *testing.B) {
 }
 
 /*
-	Sync Package
+   Sync Package
 */
 
 // waitGroupExample
@@ -208,11 +208,11 @@ func waitGroupExample() {
 
 // waitGroupExample2
 // 输出结果:
-//	Hello from 5!
-//	Hello from 4!
-//	Hello from 3!
-//	Hello from 2!
-//	Hello from 1!
+//  Hello from 5!
+//  Hello from 4!
+//  Hello from 3!
+//  Hello from 2!
+//  Hello from 1!
 func waitGroupExample2() {
 	hello := func(wg *sync.WaitGroup, id int) {
 		defer wg.Done()
@@ -229,7 +229,7 @@ func waitGroupExample2() {
 }
 
 /*
-	互斥锁与读写锁
+   互斥锁与读写锁
 */
 
 // mutexExample
@@ -401,7 +401,7 @@ func condExample2() {
 }
 
 /*
-	Once 保证函数只调用一次
+   Once 保证函数只调用一次
 */
 func onceExample() {
 	var count int
@@ -424,7 +424,7 @@ func onceExample() {
 }
 
 /*
-	Pool 池
+   Pool 池
 */
 
 func poolExample() {
@@ -559,7 +559,7 @@ func startNetworkCacheDaemon() *sync.WaitGroup {
 }
 
 /*
-	channel, 充当信息的传送管道，值可以沿着 channel 传递
+   channel, 充当信息的传送管道，值可以沿着 channel 传递
 */
 
 // chanExample channel 用法举例
@@ -629,7 +629,7 @@ func chanExample5() {
 // chanExample6
 // <- 操作符可以返回两个值
 // 输出结果：
-//	(true): Hello channels!
+//  (true): Hello channels!
 func chanExample6() {
 	stringStream := make(chan string)
 	go func() {
@@ -648,7 +648,7 @@ func chanExample6() {
 // chanExample7
 // 从一个已经关闭的 channel 读取数据
 // 输出结果：
-//	(false): 0
+//  (false): 0
 func chanExample7() {
 	intStream := make(chan int)
 	close(intStream)
@@ -714,11 +714,11 @@ func chanExample10() {
 
 // bufferedChanExample 缓冲 channel 的示例
 // 输出结果：
-//	Sending: 0
-//	Sending: 1
-//	Sending: 2
-//	Sending: 3
-//	Sending: 4
+//  Sending: 0
+//  Sending: 1
+//  Sending: 2
+//  Sending: 3
+//  Sending: 4
 //  Sending Done.
 //  Received 0.
 //  Received 1.
@@ -762,7 +762,7 @@ func bufferedChanExample() {
 
 // Close   打开但非空    关闭Channel：读取成功，直到通道耗尽，然后读取产生值的默认值
 //         打开但空      关闭Channel：读到生产者的默认值
-//		   关闭的        panic
+//         关闭的        panic
 //         只读          编译错误
 
 // chanExample11
@@ -794,9 +794,13 @@ func chanExample11() {
 }
 
 /*
-	Select
+   Select
 */
 
+// selectExample
+// select 和 channel 结合使用 demo
+// select 中的 case 语句是没有顺序，随机执行的。
+// 没有满足任何条件也不会失败。
 func selectExample() {
 	var c1, c2 <-chan interface{}
 	var c3 chan<- interface{}
@@ -809,5 +813,102 @@ func selectExample() {
 	case c3 <- struct{}{}:
 		// 其他代码
 	}
-
 }
+
+// selectExample2
+// channel 和 select 结合使用，close channel 来停止阻塞
+func selectExample2() {
+	start := time.Now()
+	c := make(chan interface{})
+
+	go func() {
+		time.Sleep(5 * time.Second)
+		close(c) // 关闭 channel 后，select 中的代码就会执行
+		// 或者使用 c <- 1 也行
+	}()
+
+	fmt.Println("Blocking on read ...")
+	select {
+	case <-c:
+		fmt.Printf("Ublocked %v later.\n", time.Since(start))
+	}
+}
+
+// selectExample3
+// 在 for-select 结构中，多个 case channel 可用
+// 代码会随机、平均执行
+func selectExample3() {
+	c1 := make(chan interface{})
+	close(c1)
+	c2 := make(chan interface{})
+	close(c2)
+
+	var c1Count, c2Count int
+	for i := 1000; i >= 0; i-- {
+		select {
+		case <-c1:
+			c1Count++
+		case <-c2:
+			c2Count++
+		}
+	}
+	fmt.Printf("c1Count: %d\nc2Count: %d\n", c1Count, c2Count)
+}
+
+// selectExample4
+// 如果没有 channel 可用，
+// 输出结果：
+// Time Out.
+func selectExample4() {
+	var c <-chan int
+	select {
+	case <-c: // c 是 nil，会一直阻塞
+	case <-time.After(time.Second):
+		fmt.Println("Time Out")
+	}
+}
+
+// selectExample4
+// select 语句允许调用 default 默认语句
+func selectExample5() {
+	start := time.Now()
+	var c1, c2 <-chan int
+	select {
+	case <-c1:
+	case <-c2:
+	default:
+		fmt.Printf("In default after %v\n\n", time.Since(start))
+	}
+}
+
+// selectExample6
+// default 子语句和 for-select 语句一起使用
+// 这允许 goroutine 在等待另一个 goroutine 上报结果的同时，可以继续执行自己的操作。
+func selectExample6() {
+	done := make(chan interface{})
+	go func() {
+		time.Sleep(5 * time.Second)
+		close(done)
+	}()
+
+	workCounter := 0
+loop:
+	for {
+		select {
+		case <-done:
+			break loop
+		default:
+		}
+		workCounter++
+		time.Sleep(time.Second)
+	}
+
+	fmt.Printf("Achieved %v cycles of work before signalled to stop.\n", workCounter)
+}
+
+// 没有 case 子句的语句，看起来像 select{}
+// 此句永远阻塞
+
+// GOMAXPROCS 控制
+// 在 runtime 包中，有一个函数称为 GOMAXPROCS。
+// runtime.GOMAXPROCS(runtime.NUMCPU)，充分利用机器上的所有 CPU 核心
