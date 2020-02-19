@@ -1,5 +1,6 @@
 // Package chapter4 Go 语言的并发模式
 // 本书重点，主要是各种并发模式的不同组合
+
 package chapter4
 
 import (
@@ -11,10 +12,9 @@ import (
 	"time"
 )
 
-// codeExample
 // "特定约束"举例
 // loopData 函数和handleData channel 上的循环都可以使用整数的数据切片
-// 惯例是，使用 loopData 函数来访问
+// 惯例是使用 loopData 函数来访问
 func codeExample() {
 	data := make([]int, 4)
 
@@ -742,16 +742,102 @@ func forSelectExample8() {
 	fmt.Printf("message: %s...", message)
 }
 
-// TODO
-
+// TODO: have a bug
 /*
 	扇入，扇出/ Fan-in, Fan-out
 */
 // 扇出，用于描述启动多个 goroutine 以处理来自 pipline 的输入的过程，
 // 扇入，是将多个结果组合到一个 channel 的过程。
-// TODO
-
 func fanInFanOutExmaple() {
+	toInt := func(done <-chan interface{},
+		valueStream <-chan interface{}) <-chan int {
+		intStream := make(chan int)
+		go func() {
+			defer close(intStream)
+			for v := range valueStream {
+				select {
+				case <-done:
+					return
+				case intStream <- v.(int):
+				}
+			}
+		}()
+		return intStream
+	}
+
+	repeatFn := func(done <-chan interface{}, fn func() interface{}) <-chan interface{} {
+		valueStream := make(chan interface{})
+		go func() {
+			defer close(valueStream)
+			for {
+				select {
+				case <-done:
+					return
+				case valueStream <- fn():
+				}
+			}
+		}()
+		return valueStream
+	}
+
+	take := func(done <-chan interface{}, valueStream <-chan interface{},
+		num int) <-chan interface{} {
+		takeStream := make(chan interface{})
+
+		go func() {
+			defer close(takeStream)
+			for i := 0; i < num; i++ {
+				select {
+				case <-done:
+					return
+				case takeStream <- valueStream:
+				}
+			}
+		}()
+		return takeStream
+	}
+
+	primeFinder := func(done <-chan interface{}, intStream <-chan int) <-chan interface{} {
+		primeStream := make(chan interface{})
+		go func() {
+			defer close(primeStream)
+			for integer := range intStream {
+				integer = -1
+				prime := true
+				for divisor := integer - 1; divisor > 1; divisor-- {
+					if integer%divisor == 0 {
+						prime = false
+						break
+					}
+				}
+
+				if prime {
+					select {
+					case <-done:
+						return
+					case primeStream <- integer:
+					}
+				}
+			}
+		}()
+		return primeStream
+	}
+
+	rand := func() interface{} { return rand.Intn(50000000) }
+
+	done := make(chan interface{})
+	defer close(done)
+
+	start := time.Now()
+
+	randIntStream := toInt(done, repeatFn(done, rand))
+	fmt.Println("Primes:")
+	for prime := range take(done, primeFinder(done, randIntStream), 10) {
+		fmt.Printf("\t%d\n", prime)
+	}
+
+	fmt.Printf("Search took: %v", time.Since(start))
+
 }
 
 /*

@@ -99,3 +99,10 @@ go test ./chapter4 -v -count=1 -run TestForSelectExample8
 func TestForSelectExample8(t *testing.T) {
 	forSelectExample8()
 }
+
+/*
+go test ./chapter4 -v -count=1 -run TestFanInFanOutExample
+*/
+func TestFanInFanOutExample(t *testing.T) {
+	fanInFanOutExmaple()
+}
