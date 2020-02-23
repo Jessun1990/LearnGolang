@@ -106,3 +106,10 @@ go test ./chapter4 -v -count=1 -run TestFanInFanOutExample
 func TestFanInFanOutExample(t *testing.T) {
 	fanInFanOutExmaple()
 }
+
+/*
+go test ./chapter4 -v -count=1 -run TestBridgeChannelExample
+*/
+func TestBridgeChannelExample(t *testing.T) {
+	bridgeChannelExample()
+}
