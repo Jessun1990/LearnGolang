@@ -1,5 +1,6 @@
 // Package chapter1 并发概述
 // 本书第一章主要讲解并发的难点以及特点
+
 package chapter1
 
 import (
@@ -11,7 +12,7 @@ import (
 )
 
 /*
-并发的难点和特点
+	并发的难点和特点
 */
 // raceCondCase：竞争条件的代码举例
 func raceCondCase() {

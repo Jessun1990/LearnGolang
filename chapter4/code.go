@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"math/rand"
 	"net/http"
+	"runtime"
 	"sync"
 	"time"
 )
@@ -531,18 +532,18 @@ func pipelineExample3() {
 		done <-chan interface{},
 		intStream <-chan int,
 		multiplier int) <-chan int {
-		multipliedStram := make(chan int)
+		multipliedStream := make(chan int)
 		go func() {
-			defer close(multipliedStram)
+			defer close(multipliedStream)
 			for i := range intStream {
 				select {
 				case <-done:
 					return
-				case multipliedStram <- i * multiplier:
+				case multipliedStream <- i * multiplier:
 				}
 			}
 		}()
-		return multipliedStram
+		return multipliedStream
 	}
 
 	add := func(
@@ -742,29 +743,16 @@ func forSelectExample8() {
 	fmt.Printf("message: %s...", message)
 }
 
-// TODO: have a bug
+// TODO: the testFunc shows a bug
 /*
 	扇入，扇出/ Fan-in, Fan-out
 */
-// 扇出，用于描述启动多个 goroutine 以处理来自 pipline 的输入的过程，
-// 扇入，是将多个结果组合到一个 channel 的过程。
+// 扇出: 用于描述启动多个 goroutine 以处理来自 pipline 的输入的过程，
+// 扇入: 是将多个结果组合到一个 channel 的过程。
+// 举例: 用于寻找素数的低效程序
 func fanInFanOutExmaple() {
-	toInt := func(done <-chan interface{},
-		valueStream <-chan interface{}) <-chan int {
-		intStream := make(chan int)
-		go func() {
-			defer close(intStream)
-			for v := range valueStream {
-				select {
-				case <-done:
-					return
-				case intStream <- v.(int):
-				}
-			}
-		}()
-		return intStream
-	}
 
+	// repeatFn: 重复 fn 函数
 	repeatFn := func(done <-chan interface{}, fn func() interface{}) <-chan interface{} {
 		valueStream := make(chan interface{})
 		go func() {
@@ -780,29 +768,43 @@ func fanInFanOutExmaple() {
 		return valueStream
 	}
 
-	take := func(done <-chan interface{}, valueStream <-chan interface{},
-		num int) <-chan interface{} {
+	// take
+	take := func(done <-chan interface{}, valueStream <-chan interface{}, num int,
+	) <-chan interface{} {
 		takeStream := make(chan interface{})
-
 		go func() {
 			defer close(takeStream)
 			for i := 0; i < num; i++ {
 				select {
 				case <-done:
 					return
-				case takeStream <- valueStream:
+				case takeStream <- <-valueStream:
 				}
 			}
 		}()
 		return takeStream
 	}
 
+	toInt := func(done <-chan interface{}, valueStream <-chan interface{}) <-chan int {
+		intStream := make(chan int)
+		go func() {
+			defer close(intStream)
+			for v := range valueStream {
+				select {
+				case <-done:
+					return
+				case intStream <- v.(int):
+				}
+			}
+		}()
+		return intStream
+	}
 	primeFinder := func(done <-chan interface{}, intStream <-chan int) <-chan interface{} {
 		primeStream := make(chan interface{})
 		go func() {
 			defer close(primeStream)
 			for integer := range intStream {
-				integer = -1
+				integer -= 1
 				prime := true
 				for divisor := integer - 1; divisor > 1; divisor-- {
 					if integer%divisor == 0 {
@@ -822,22 +824,56 @@ func fanInFanOutExmaple() {
 		}()
 		return primeStream
 	}
+	fanIn := func(done <-chan interface{}, channels ...<-chan interface{}) <-chan interface{} {
+		var wg sync.WaitGroup
+		multiplexedStream := make(chan interface{})
 
-	rand := func() interface{} { return rand.Intn(50000000) }
+		multiplex := func(c <-chan interface{}) {
+			defer wg.Done()
+			for i := range c {
+				select {
+				case <-done:
+					return
+				case multiplexedStream <- i:
+				}
+			}
+		}
+
+		wg.Add(len(channels))
+		for _, c := range channels {
+			go multiplex(c)
+		}
+
+		go func() {
+			wg.Wait()
+			close(multiplexedStream)
+		}()
+
+		return multiplexedStream
+	}
 
 	done := make(chan interface{})
 	defer close(done)
 
 	start := time.Now()
 
+	rand := func() interface{} { return rand.Intn(50000000) }
+
 	randIntStream := toInt(done, repeatFn(done, rand))
+
+	numFinders := runtime.NumCPU()
+	fmt.Printf("Spinning up %d prime finders.\n", numFinders)
+	finders := make([]<-chan interface{}, numFinders)
 	fmt.Println("Primes:")
-	for prime := range take(done, primeFinder(done, randIntStream), 10) {
+	for i := 0; i < numFinders; i++ {
+		finders[i] = primeFinder(done, randIntStream)
+	}
+
+	for prime := range take(done, fanIn(done, finders...), 10) {
 		fmt.Printf("\t%d\n", prime)
 	}
 
 	fmt.Printf("Search took: %v", time.Since(start))
-
 }
 
 /*
@@ -875,4 +911,4 @@ func orDoneExample() {
 	for val := range orDone(done, myChan) {
 		fmt.Println(val)
 	}
-}
+
